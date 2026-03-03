@@ -1,1 +1,3 @@
-<img src="IMG/00001.jpg" width="200" height="400"/>
+<div style="text-align: center;">
+    <img width="100%" src="/path/to/image.png">
+</div>
