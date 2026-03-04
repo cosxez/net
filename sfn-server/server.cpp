@@ -51,8 +51,7 @@ void client_conn(int client_sock,std::ofstream &file,std::ofstream &ser)
 							sf.read(reinterpret_cast<char*>(cs.data()),cs.size());
 							sf.close();
 						
-							std::string sz=std::to_string((int)size_f);
-							send(client_sock,sz.c_str(),sz.size(),0);
+							send(client_sock,(const char*) &size_f,size_f,0);
 							send(client_sock,cs.data(),cs.size(),0);
 						}
 					}
@@ -90,7 +89,6 @@ int main()
 
 	listen(sock,8);
 	
-	//std::vector<std::string> files={"16732"};
 	bool run=true;
 	std::ofstream errs("err.txt",std::ios::app);
 	std::ofstream server_work("server_work.txt");
