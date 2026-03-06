@@ -3,7 +3,6 @@
 #include <fstream>
 #include <thread>
 #include <vector>
-#include <cstring>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
