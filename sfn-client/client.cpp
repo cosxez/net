@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -9,62 +10,67 @@
 int main()
 {
 	int sock=socket(AF_INET,SOCK_STREAM,0);
+
 	std::string ip_addr;
-	std::cout<<"Enter ip address(default 192.168.1.160): ";
-	getline(std::cin,ip_addr);
+	while (ip_addr.empty())
+	{
+		std::cout<<"Enter ip address: ";
+		getline(std::cin,ip_addr);
+	}
 
 	std::string port;
-	std::cout<<"Enter port(default 3580): ";
-	getline(std::cin,port);
+	while (port.empty())
+	{
+		std::cout<<"Enter port: ";
+		getline(std::cin,port);
+	}
 
 	sockaddr_in addr;
-	memset(&addr,0,sizeof(addr));
 	addr.sin_family=AF_INET;
 	addr.sin_port=htons(std::stoi(port));
-	
-	inet_pton(AF_INET,ip_addr.c_str(),&addr.sin_addr);
 
-	std::cout<<"Connection\n";
-	try{connect(sock,(struct sockaddr*)&addr,sizeof(addr));}catch(std::exception &er){std::cout<<"Error connect: "<<er.what()<<std::endl;}
-	std::cout<<"Connected\n";
+	inet_pton(AF_INET,ip_addr.c_str(),&addr.sin_addr);
+	try{connect(sock,(struct sockaddr*)&addr,sizeof(addr));}catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
+
 	while (true)
 	{
 		std::string cmd;
-		std::cout<<'>';
-		getline(std::cin,cmd);
-		if (cmd=="exit"){break;}
-		else if (cmd=="io")
+		while (cmd.empty())
 		{
-			std::string id;
-			std::cout<<"Enter file id: ";
-			getline(std::cin,id);
-
-			std::string req="GET DATA:"+id;
-			send(sock,req.c_str(),req.size(),0);
-			char size_fs[128];
-			memset(size_fs,0,sizeof(size_fs));
-			int si=recv(sock,size_fs,sizeof(size_fs),0);
-			size_fs[si]='\0';
-			std::cout<<si<<' '<<size_fs<<std::endl;
-			std::string sz="0";
-			for (int i=0;size_fs[i]!='\0';i++){sz+=size_fs[i];}			
-
-			std::vector<char> cs(std::stoi(sz));
-			recv(sock,cs.data(),cs.size(),0);
-			std::ofstream file(id+".jpg",std::ios::binary);
-			file.write(reinterpret_cast<const char*>(cs.data()),cs.size());
-			file.close();
+			std::cout<<'>';
+			getline(std::cin,cmd);
 		}
-		else
+		if (cmd=="exit"){break;}
+		else if(cmd=="io")
 		{
-			if (cmd.size()<4096)
+			try
 			{
-				try
+				std::string dts;
+				while (dts.empty())
 				{
-					if (send(sock,cmd.c_str(),cmd.size(),0)<0){perror("Error: ");}
+					std::cout<<"Enter file name: ";
+					getline(std::cin,dts);
 				}
-				catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
+				std::string endstr="GET DATA:"+dts;
+				send(sock,endstr.c_str(),endstr.size(),0);
+
+				size_t fs;
+				recv(sock,reinterpret_cast<char*>(&fs),sizeof(fs),0);
+				if (fs!=16360)
+				{
+					std::vector<char> cs(fs);
+					size_t fns=0;
+					while (fns<cs.size())
+					{
+						fns+=recv(sock,cs.data()+fns,cs.size(),0);
+					}
+
+					std::ofstream file(dts,std::ios::binary);
+					file.write(reinterpret_cast<const char*>(cs.data()),cs.size());
+					file.close();
+				}
 			}
+			catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
 		}
 	}
 	close(sock);

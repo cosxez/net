@@ -3,111 +3,81 @@
 #include <fstream>
 #include <thread>
 #include <vector>
+#include <cstring>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
-void client_conn(int client_sock,std::ofstream &file,std::ofstream &ser)
+void client_conn(int client)
 {
-	char buffer[4096];
+	char buffer[1024];
+	std::string str;
+	std::string data;
 	while (true)
 	{
 		try
 		{
-			size_t size_buff=recv(client_sock,buffer,sizeof(buffer),0);
-			if (size_buff<=0){break;}
-			
-			if (size_buff<4096)
+			ssize_t sb=recv(client,buffer,sizeof(buffer)-1,0);
+			if (sb>0)
 			{
-				buffer[size_buff]='\0';
-			}
-			if (size_buff>8)
-			{
-				std::string check;
-				for (uint8_t i=0;i<9;i++)
+				buffer[sb]='\0';
+				for (int i=0;i<9;i++){str+=buffer[i];}
+				if (str=="GET DATA:")
 				{
-					check+=buffer[i];
-				}
-				if (check=="GET DATA:")
-				{
-					std::string data;
-					for (uint8_t i=9;buffer[i]!='\0';i++)
+					for (int i=9;buffer[i]!='\0';i++){data+=buffer[i];}
+					std::ifstream file(data,std::ios::binary);
+					if (!file.is_open()){uint16_t ierr=16360;send(client,reinterpret_cast<const char*>(&ierr),sizeof(ierr),0);}
+					else
 					{
-						data+=buffer[i];
-					}
-					if (data.size()>0)
-					{
-						std::ifstream sf(data,std::ios::binary);
-						if (!sf.is_open()){std::cout<<"File dont exist\n";ser<<"File dont exist"<<std::endl;}
-						else
-						{
-							sf.seekg(0,std::ios::end);
-							size_t size_f=sf.tellg();
-							std::vector<char> cs(size_f);
-							
-							sf.seekg(0,std::ios::beg);
-							sf.read(reinterpret_cast<char*>(cs.data()),cs.size());
-							sf.close();
+						file.seekg(0,std::ios::end);
+						size_t fs=file.tellg();
+						file.seekg(0,std::ios::beg);
 						
-							send(client_sock,(const char*) &size_f,size_f,0);
-							send(client_sock,cs.data(),cs.size(),0);
-						}
+						std::vector<char> cs(fs);
+						file.read(reinterpret_cast<char*>(cs.data()),cs.size());
+						file.close();
+	
+						send(client,reinterpret_cast<const char*>(&fs),sizeof(fs),0);
+						send(client,cs.data(),cs.size(),0);
 					}
 				}
 			}
+			else{break;}
 		}
-		catch(std::exception &e){std::cout<<"Error client: "<<e.what()<<std::endl;file<<"Error client: "<<e.what()<<std::endl;}
+		catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
+		memset(buffer,0,sizeof(buffer));
+		str.clear();
+		data.clear();
 	}
-	close(client_sock);
-	std::cout<<"Client disconnected\n";
-	ser<<"Client disconnected"<<std::endl;
-}
-
-void terminal(bool &run)
-{
-	while (true)
-	{
-		std::string cmd;
-		std::cout<<'>';
-		getline(std::cin,cmd);
-		if (cmd=="exit"){run=false;break;}
-	}
+	close(client);
+	std::cout<<"Client dissconeted\n";
 }
 
 int main()
 {
 	int sock=socket(AF_INET,SOCK_STREAM,0);
+	
 	sockaddr_in addr;
-	memset(&addr,0,sizeof(addr));
 	addr.sin_family=AF_INET;
 	addr.sin_port=htons(3580);
 	addr.sin_addr.s_addr=INADDR_ANY;
-	
-	bind(sock,(struct sockaddr*) &addr,sizeof(addr));
 
-	listen(sock,8);
-	
-	bool run=true;
-	std::ofstream errs("err.txt",std::ios::app);
-	std::ofstream server_work("server_work.txt");
-	std::cout<<"Server start\n";
-	server_work<<"Server start"<<std::endl;
+	bind(sock,(struct sockaddr*)&addr,sizeof(addr));
+	listen(sock,16);
 
-	while (run)
+	std::cout<<"Server work\n";
+
+	while (true)
 	{
 		try
 		{
-			int client_acc=accept(sock,nullptr,nullptr);
-			std::cout<<"Client connected\n";server_work<<"Client connected"<<std::endl;
-			std::thread(client_conn,client_acc,ref(errs),ref(server_work)).detach();
+			int cl=accept(sock,nullptr,nullptr);
+			std::cout<<"Client connected\n";
+			std::thread(client_conn,cl).detach();
 		}
-		catch(std::exception &err){std::cout<<"Error client conn: "<<err.what()<<std::endl;errs<<"Error client conn: "<<err.what()<<std::endl;}
+		catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
 	}
 	close(sock);
-	std::cout<<"Server was stopped\n";
-	server_work<<"Server was stopped"<<std::endl;
-	errs.close();
-	server_work.close();
 	return 0;
 }
