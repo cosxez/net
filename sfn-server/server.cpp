@@ -47,7 +47,6 @@ void client_conn(int client)
 			else{break;}
 		}
 		catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
-		memset(buffer,0,sizeof(buffer));
 		str.clear();
 		data.clear();
 	}
