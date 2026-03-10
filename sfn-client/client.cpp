@@ -94,7 +94,7 @@ int main()
 									size_t fs;
 									recv(sock,&fs,sizeof(fs),0);
 									std::vector<char> fs_data(fs);
-									size_t fsds;
+									size_t fsds=0;
 									while (fsds<fs_data.size())
 									{
 										fsds+=recv(sock,fs_data.data()+fsds,fs_data.size(),0);
