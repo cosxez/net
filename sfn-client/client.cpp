@@ -43,7 +43,12 @@ int main()
 				while (ip_addr.empty()){std::cout<<"Enter ip address: ";getline(std::cin,ip_addr);}
 				std::string port;
 				while (port.empty()){std::cout<<"Enter port: ";getline(std::cin,port);}
-				
+				std::string url_s;
+				if (is_ar==true)
+				{
+					while (url_s.empty()){std::cout<<"Enter url: ";getline(std::cin,url_s);}
+				}
+
 				memset(&addr,0,sizeof(addr));
 				try
 				{
@@ -51,7 +56,26 @@ int main()
 					addr.sin_port=htons(std::stoi(port));
 					inet_pton(AF_INET,ip_addr.c_str(),&addr.sin_addr);
 					connect(sock,(struct sockaddr*)&addr,sizeof(addr));
-					std::cout<<"Connected\n";
+					
+					if (is_ar==true && !url_s.empty())
+					{
+						send(sock,url_s.c_str(),url_s.size(),0);
+						char buffer[1024];
+						size_t stp=recv(sock,buffer,sizeof(buffer),0);
+						buffer[stp]='\0';
+						if (stp==1 && buffer[0]=='1')
+						{
+							stp=recv(sock,buffer,sizeof(buffer),0);
+							std::cout<<stp<<std::endl;
+							for (int i=0;i<stp;i++)
+							{
+								size_t ltp=recv(sock,buffer,sizeof(buffer),0);
+								buffer[ltp]='\0';
+								for (int j=0;j<ltp;j++){std::cout<<buffer[j];}
+							}
+						}
+						if (stp==1 && buffer[0]=='0'){std::cout<<"URL error: site doesnt exist\n";}
+					}
 				}
 				catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
 				shutdown(sock,SHUT_RDWR);

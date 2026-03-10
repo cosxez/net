@@ -23,26 +23,20 @@ void client_conn(int client)
 			if (sb>0)
 			{
 				buffer[sb]='\0';
-				for (int i=0;i<9;i++){str+=buffer[i];}
-				if (str=="GET DATA:")
+				for (int i=0;i<sb;i++){str+=buffer[i];}
+				if (str=="inetpic")
 				{
-					for (int i=9;buffer[i]!='\0';i++){data+=buffer[i];}
-					std::ifstream file(data,std::ios::binary);
-					if (!file.is_open()){uint16_t ierr=16360;send(client,reinterpret_cast<const char*>(&ierr),sizeof(ierr),0);}
-					else
+					std::string err_url="1";
+					send(client,err_url.c_str(),err_url.size(),0);
+					std::vector<std::string> fls;
+					for (auto &c: std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename());}
+					send(client,(const char*)fls.size(),256,0);
+					for (int i=0;i<fls.size();i++)
 					{
-						file.seekg(0,std::ios::end);
-						size_t fs=file.tellg();
-						file.seekg(0,std::ios::beg);
-						
-						std::vector<char> cs(fs);
-						file.read(reinterpret_cast<char*>(cs.data()),cs.size());
-						file.close();
-	
-						send(client,reinterpret_cast<const char*>(&fs),sizeof(fs),0);
-						send(client,cs.data(),cs.size(),0);
+						send(client,fls[i].c_str(),fls[i].size(),0);
 					}
-				}	
+				}
+				else{std::string err_url="0";send(client,err_url.c_str(),err_url.size(),0);}
 			}
 			else{break;}
 		}
