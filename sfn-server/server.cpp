@@ -19,7 +19,7 @@ void client_conn(int client)
 	{
 		try
 		{
-			ssize_t sb=recv(client,buffer,sizeof(buffer)-1,0);
+			ssize_t sb=recv(client,buffer,sizeof(buffer),0);
 			if (sb>0)
 			{
 				buffer[sb]='\0';
@@ -30,10 +30,31 @@ void client_conn(int client)
 					send(client,err_url.c_str(),err_url.size(),0);
 					std::vector<std::string> fls;
 					for (auto &c: std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename());}
-					send(client,(const char*)fls.size(),256,0);
+					size_t flss=fls.size();
+					send(client,&flss,sizeof(flss),0);
 					for (int i=0;i<fls.size();i++)
 					{
 						send(client,fls[i].c_str(),fls[i].size(),0);
+					}
+					sb=recv(client,buffer,sizeof(buffer),0);
+					buffer[sb]='\0';
+					str="";
+					for (int i=0;i<9;i++){str+=buffer[i];}
+					if (str=="GET DATA:")
+					{
+						data="";
+						for (int i=9;buffer[i]!='\0';i++){data+=buffer[i];}
+						std::ifstream file("inetpic_data/" + data,std::ios::binary);
+						file.seekg(0,std::ios::end);
+						size_t fsd=file.tellg();
+						file.seekg(0,std::ios::beg);
+
+						std::vector<char> fs_data(fsd);
+						file.read(reinterpret_cast<char*>(fs_data.data()),fs_data.size());
+						file.close();
+						
+						send(client,&fsd,sizeof(fsd),0);
+						send(client,fs_data.data(),fs_data.size(),0);
 					}
 				}
 				else{std::string err_url="0";send(client,err_url.c_str(),err_url.size(),0);}

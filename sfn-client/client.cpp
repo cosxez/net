@@ -65,14 +65,47 @@ int main()
 						buffer[stp]='\0';
 						if (stp==1 && buffer[0]=='1')
 						{
-							stp=recv(sock,buffer,sizeof(buffer),0);
-							std::cout<<stp<<std::endl;
-							for (int i=0;i<stp;i++)
+							size_t flss;
+							stp=recv(sock,&flss,sizeof(flss),0);
+							std::vector<std::string> fls;
+
+							for (int i=0;i<flss;i++)
 							{
-								size_t ltp=recv(sock,buffer,sizeof(buffer),0);
-								buffer[ltp]='\0';
-								for (int j=0;j<ltp;j++){std::cout<<buffer[j];}
+								stp=recv(sock,buffer,sizeof(buffer),0);
+								buffer[stp]='\0';
+								std::string lspw;
+								for (int j=0;j<stp;j++){lspw+=buffer[j];}
+								fls.push_back(lspw);
 							}
+							for (auto &c:fls){std::cout<<c<<std::endl;}
+							
+							std::string fln;
+							std::cout<<"Enter filename(if you want download): ";
+							getline(std::cin,fln);
+							
+							if (!fln.empty())
+							{
+								bool file_ex=false;
+								for (int i=0;i<fls.size();i++){if (fln==fls[i]){file_ex=true;}}
+								if (file_ex==true)
+								{
+									std::string endline="GET DATA:"+fln;
+									send(sock,endline.c_str(),endline.size(),0);
+									size_t fs;
+									recv(sock,&fs,sizeof(fs),0);
+									std::vector<char> fs_data(fs);
+									size_t fsds;
+									while (fsds<fs_data.size())
+									{
+										fsds+=recv(sock,fs_data.data()+fsds,fs_data.size(),0);
+									}
+
+									std::ofstream file(fln,std::ios::binary);
+									file.write(reinterpret_cast<const char*>(fs_data.data()),fs_data.size());
+									file.close();
+								}
+							}
+							else{std::string cl_conn="close";send(sock,cl_conn.c_str(),cl_conn.size(),0);}
 						}
 						if (stp==1 && buffer[0]=='0'){std::cout<<"URL error: site doesnt exist\n";}
 					}
