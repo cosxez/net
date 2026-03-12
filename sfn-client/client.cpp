@@ -72,43 +72,59 @@ int main()
 							stp=0;
 							while (stp<flss)
 							{
-								stp+=recv(sock,buffer,sizeof(buffer),0);
-								buffer[stp]='\0';
+								size_t crtp=recv(sock,buffer,sizeof(buffer),0);
+								stp+=crtp;
+								buffer[crtp]='\0';
 								std::string lspw;
-								for (int j=0;j<stp;j++){lspw+=buffer[j];}
+								for (int j=0;j<crtp;j++){lspw+=buffer[j];}
 								fls.push_back(lspw);
 							}
 							for (auto &c:fls){std::cout<<c<<std::endl;}
 							
-							std::string fln;
-							std::cout<<"Enter filename(if you want download): ";
-							getline(std::cin,fln);
-							
-							if (!fln.empty())
-							{
-								bool file_ex=false;
-								for (int i=0;i<fls.size();i++){if (fln==fls[i]){file_ex=true;}}
-								if (file_ex==true)
-								{
-									std::string endline="GET DATA:"+fln;
-									send(sock,endline.c_str(),endline.size(),0);
-									size_t fs;
-									recv(sock,&fs,sizeof(fs),0);
-									std::vector<char> fs_data(fs);
-									size_t fsds=0;
-									while (fsds<fs_data.size())
-									{
-										fsds+=recv(sock,fs_data.data()+fsds,fs_data.size(),0);
-									}
 
-									std::ofstream file(fln,std::ios::binary);
-									file.write(reinterpret_cast<const char*>(fs_data.data()),fs_data.size());
-									file.close();
+							std::string fln;
+							while (true)
+							{
+								std::cout<<"Enter filename(if you want download, \"exit\" - for close connect): ";
+								getline(std::cin,fln);
+								
+								if (fln=="exit"){std::string cl_conn="close";send(sock,cl_conn.c_str(),cl_conn.size(),0);break;}
+								if (!fln.empty())
+								{
+									bool file_ex=false;
+									for (int i=0;i<fls.size();i++){if (fln==fls[i]){file_ex=true;}}
+									if (file_ex==true)
+									{
+										std::string endline="GET DATA:"+fln;
+										send(sock,endline.c_str(),endline.size(),0);
+										size_t fs;
+										recv(sock,&fs,sizeof(fs),0);
+										std::vector<char> fs_data(fs);
+										size_t fsds=0;
+										while (fsds<fs_data.size())
+										{
+											fsds+=recv(sock,fs_data.data()+fsds,fs_data.size(),0);
+										}
+	
+										std::ofstream file(fln,std::ios::binary);
+										file.write(reinterpret_cast<const char*>(fs_data.data()),fs_data.size());
+										file.close();
+									}
 								}
+								else{std::string cl_conn="close";send(sock,cl_conn.c_str(),cl_conn.size(),0);}
 							}
-							else{std::string cl_conn="close";send(sock,cl_conn.c_str(),cl_conn.size(),0);}
 						}
 						if (stp==1 && buffer[0]=='0'){std::cout<<"URL error: site doesnt exist\n";}
+					}
+					if (is_ar==false)
+					{
+						while (true)
+						{
+							std::string tcmd;
+							while (tcmd.empty()){std::cout<<"Enter data for tcp server(tcpclose for close connect): ";getline(std::cin,tcmd);}
+							if (tcmd=="tcpclose"){break;}
+							send(sock,tcmd.c_str(),tcmd.size(),0);
+						}
 					}
 				}
 				catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}

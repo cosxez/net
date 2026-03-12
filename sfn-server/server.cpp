@@ -35,30 +35,38 @@ void client_conn(int client)
 					size_t flss=0;
 					for (int i=0;i<fls.size();i++){flss+=fls[i].size();}
 					send(client,&flss,sizeof(flss),0);
-					std::this_thread::sleep_for(std::chrono::milliseconds(100));
+					std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					for (int i=0;i<fls.size();i++)
 					{
 						send(client,fls[i].c_str(),fls[i].size(),0);
+						std::this_thread::sleep_for(std::chrono::milliseconds(10));
 					}
-					sb=recv(client,buffer,sizeof(buffer),0);
-					buffer[sb]='\0';
-					str="";
-					for (int i=0;i<9;i++){str+=buffer[i];}
-					if (str=="GET DATA:")
+					while (true)
 					{
-						data="";
-						for (int i=9;buffer[i]!='\0';i++){data+=buffer[i];}
-						std::ifstream file("inetpic_data/" + data,std::ios::binary);
-						file.seekg(0,std::ios::end);
-						size_t fsd=file.tellg();
-						file.seekg(0,std::ios::beg);
-
-						std::vector<char> fs_data(fsd);
-						file.read(reinterpret_cast<char*>(fs_data.data()),fs_data.size());
-						file.close();
+						sb=recv(client,buffer,sizeof(buffer),0);
+						buffer[sb]='\0';
+						str="";
+						for (int i=0;i<5;i++){str+=buffer[i];}
+						if (str=="close"){close(client);std::cout<<"Client dissconected\n";return;}
+						str="";
+						for (int i=0;i<9;i++){str+=buffer[i];}
+						if (str=="GET DATA:")
+						{
+							data="";
+							for (int i=9;buffer[i]!='\0';i++){data+=buffer[i];}
+							std::ifstream file("inetpic_data/" + data,std::ios::binary);
+							file.seekg(0,std::ios::end);
+							size_t fsd=file.tellg();
+							file.seekg(0,std::ios::beg);
+	
+							std::vector<char> fs_data(fsd);
+							file.read(reinterpret_cast<char*>(fs_data.data()),fs_data.size());
+							file.close();
+							
+							send(client,&fsd,sizeof(fsd),0);
+							send(client,fs_data.data(),fs_data.size(),0);
+						}
 						
-						send(client,&fsd,sizeof(fsd),0);
-						send(client,fs_data.data(),fs_data.size(),0);
 					}
 				}
 				else{std::string err_url="0";send(client,err_url.c_str(),err_url.size(),0);}
