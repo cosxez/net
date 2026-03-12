@@ -31,7 +31,7 @@ void client_conn(int client)
 					std::vector<std::string> fls;
 					for (auto &c: std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename());}
 					size_t flss=fls.size();
-					send(client,&flss,sizeof(flss),0);
+					send(client,reinterpret_cast<const char*>(&flss),sizeof(flss),0);
 					for (int i=0;i<fls.size();i++)
 					{
 						send(client,fls[i].c_str(),fls[i].size(),0);

@@ -92,7 +92,7 @@ int main()
 									std::string endline="GET DATA:"+fln;
 									send(sock,endline.c_str(),endline.size(),0);
 									size_t fs;
-									recv(sock,&fs,sizeof(fs),0);
+									recv(sock,reinterpret_cast<char*>(&fs),sizeof(fs),0);
 									std::vector<char> fs_data(fs);
 									size_t fsds=0;
 									while (fsds<fs_data.size())
