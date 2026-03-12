@@ -15,11 +15,6 @@ void ulb_clear()
 
 int main()
 {
-	int sock=socket(AF_INET,SOCK_STREAM,0);
-	
-	sockaddr_in addr;
-	
-
 	ulb_clear();
 	bool is_ar=true;
 	std::cout<<"Mode: "<<(is_ar ? "auto request" : "manual request")<<std::endl;
@@ -32,6 +27,10 @@ int main()
 		if (cmd=="help"){std::cout<<"crm - change requests mode (auto request or manual)\n"<<"conn - tcp connect\n";continue;}
 		if (cmd.size()==4)
 		{
+			int sock=socket(AF_INET,SOCK_STREAM,0);
+			
+			sockaddr_in addr;
+
 			std::string ft;
 			for (int i=0;i<4;i++)
 			{
@@ -128,10 +127,9 @@ int main()
 					}
 				}
 				catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
-				shutdown(sock,SHUT_RDWR);
 			}
+			close(sock);
 		}
 	}
-	close(sock);
 	return 0;
 }
