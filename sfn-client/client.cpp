@@ -69,9 +69,10 @@ int main()
 							stp=recv(sock,&flss,sizeof(flss),0);
 							std::vector<std::string> fls;
 
-							for (int i=0;i<flss;i++)
+							stp=0;
+							while (stp<flss)
 							{
-								stp=recv(sock,buffer,sizeof(buffer),0);
+								stp+=recv(sock,buffer,sizeof(buffer),0);
 								buffer[stp]='\0';
 								std::string lspw;
 								for (int j=0;j<stp;j++){lspw+=buffer[j];}
@@ -92,7 +93,7 @@ int main()
 									std::string endline="GET DATA:"+fln;
 									send(sock,endline.c_str(),endline.size(),0);
 									size_t fs;
-									recv(sock,reinterpret_cast<char*>(&fs),sizeof(fs),0);
+									recv(sock,&fs,sizeof(fs),0);
 									std::vector<char> fs_data(fs);
 									size_t fsds=0;
 									while (fsds<fs_data.size())
