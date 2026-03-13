@@ -69,6 +69,54 @@ void client_conn(int client)
 						
 					}
 				}
+				str="";
+				for (int i=0;i<21;i++){str+=buffer[i];}
+				if (str=="GET /inetpic HTTP/1.1")
+				{
+					try
+					{
+						std::ifstream hindexf("inetpic.html");
+						std::string lines_index="";
+
+						while (!hindexf.eof())
+						{
+							std::string cl;
+							getline(hindexf,cl);
+							lines_index+=cl;
+						}
+						hindexf.close();
+						std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
+					       	headhttp+=std::to_string(lines_index.size()) + "\r\nConnection: keep-alive\r\n\r\n" + lines_index;
+						send(client,headhttp.c_str(),headhttp.size(),0);
+
+						size_t stp=recv(client,buffer,sizeof(buffer),0);
+						buffer[stp]='\0';
+						str="";
+						for (int i=5;buffer[i]!=' ';i++){str+=buffer[i];}
+						
+						std::ifstream file("inetpic_data/" + str,std::ios::binary);
+						if (file.is_open())
+						{
+							file.seekg(0,std::ios::end);
+							size_t fs=file.tellg();
+							file.seekg(0,std::ios::beg);
+
+							std::vector<char> fld(fs);
+							file.read(reinterpret_cast<char*>(fld.data()),fld.size());
+							file.close();
+							data="HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nContent-Length: " + std::to_string(fs) + "\r\nConnection: keep-alive\r\n\r\n";
+							send(client,data.c_str(),data.size(),0);
+							send(client,fld.data(),fld.size(),0);
+						}
+						else
+						{
+							data="HTTP/1.1 404 Not Found\r\n\r\n";
+							send(client,data.c_str(),data.size(),0);
+						}
+
+					}
+					catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
+				}
 				else{std::string err_url="0";send(client,err_url.c_str(),err_url.size(),0);}
 			}
 			else{break;}
