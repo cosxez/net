@@ -1,5 +1,5 @@
 # Local net
-### Example local net:
+## Example local net:
 
 ### 1. AP
 ```
@@ -24,3 +24,8 @@
   │        │    │        │    │        │
   └────────┘    └────────┘    └────────┘
 ```
+## Commands for compile:
+### For server.cpp:
+``g++ server.cpp -o main -lpthread``
+### For client.cpp:
+``g++ client.cpp -o main``
