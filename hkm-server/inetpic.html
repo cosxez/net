@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>inetpic</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --accent-white: #ffffff;
+            --card-bg: #111111;
+            --text-muted: #888888;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--accent-white);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 50px 20px;
+        }
+        .main-frame {
+            width: 100%;
+            max-width: 1000px;
+            border: 1px solid var(--accent-white);
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        header {
+            margin-bottom: 50px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 20px;
+        }
+        h1 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin: 0;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .gallery-grid::-webkit-scrollbar {
+            width: 3px;
+        }
+        .gallery-grid::-webkit-scrollbar-thumb {
+            background: white;
+        }
+        .img-card {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid #222;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+        .img-card:hover {
+            border-color: var(--accent-white);
+        }
+        .img-card img {
+            width: 100%;
+            height: 350px;
+            object-fit: cover;
+            display: block;
+            filter: grayscale(100%);
+            transition: transform 0.5s ease, filter 0.5s ease;
+        }
+        .img-card:hover img {
+            transform: scale(1.05);
+            filter: grayscale(0%);
+        }
+        .img-info {
+            padding: 15px;
+            font-size: 12px;
+            background: var(--card-bg);
+            border-top: 1px solid #222;
+        }
+        .img-info span {
+            display: block;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+        .img-info b {
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
