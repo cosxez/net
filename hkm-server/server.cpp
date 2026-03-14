@@ -20,7 +20,7 @@ void client_conn(int client)
 	{
 		try
 		{
-			ssize_t sb=recv(client,buffer,sizeof(buffer),0);
+			ssize_t sb=recv(client,buffer,sizeof(buffer)-1,0);
 			if (sb>0)
 			{
 				buffer[sb]='\0';
@@ -43,7 +43,7 @@ void client_conn(int client)
 					}
 					while (true)
 					{
-						sb=recv(client,buffer,sizeof(buffer),0);
+						sb=recv(client,buffer,sizeof(buffer)-1,0);
 						buffer[sb]='\0';
 						str="";
 						for (int i=0;i<5;i++){str+=buffer[i];}
