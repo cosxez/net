@@ -69,113 +69,106 @@ void client_conn(int client)
 						
 					}
 				}
-				if (sb>0)
+				str="";
+				for (int i=0;i<14;i++){str+=buffer[i];}
+				if (str=="GET / HTTP/1.1")
 				{
-					str="";
-					for (int i=0;i<14;i++){str+=buffer[i];}
-					if (str=="GET / HTTP/1.1")
+					try
 					{
-						try
+						std::ifstream hsearchf("search_main.html");
+						std::string linef="";
+						
+						if (hsearchf.is_open())
 						{
-							std::ifstream hsearchf("search_main.html");
-							std::string linef="";
-							
-							if (hsearchf.is_open())
-							{
-								while (!hsearchf.eof())
-								{
-									std::string cl;
-									getline(hsearchf,cl);
-									linef+=cl;
-								}
-							}
-							hsearchf.close();
-
-							std::vector<std::string> sites={"inetpic"};
-
-							std::string list_s="<body><div class=\"main-frame\"><header><h1>SITES LIST</h1></header><nav class=\"nav-list\">";
-							for (int i=0;i<sites.size();i++){list_s+="<a href=\"/" + sites[i] + "\" class=\"nav-item\"><b>" + sites[i] + "</b></a>";}
-							list_s+="</nav></div></body></html>";
-							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: " + std::to_string(linef.size() + list_s.size()) + "\r\nConnection: close\r\n\r\n" + linef + list_s;
-							
-							send(client,headhttp.c_str(),headhttp.size(),0);
-						}
-						catch(std::exception &er){std::cout<<"Error: "<<er.what();}
-					}
-				}
-				if (sb>0)
-				{
-					str="";
-					for (int i=0;i<21;i++){str+=buffer[i];}
-					if (str=="GET /inetpic HTTP/1.1")
-					{
-						try
-						{
-							std::ifstream hindexf("inetpic.html");
-							std::string lines_index="";
-	
-							while (!hindexf.eof())
+							while (!hsearchf.eof())
 							{
 								std::string cl;
-								getline(hindexf,cl);
-								lines_index+=cl;
+								getline(hsearchf,cl);
+								linef+=cl;
 							}
-							hindexf.close();
-							
-							std::vector<std::string> fls;
-							for (auto &c:std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename().string());}
-							
-							std::string imgcard="<body><div class=\"main-frame\"><header><h1>惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝ ̶̛̛̆͛́̓̈́͂͌͑̒̉͐̀̀͋̀̚̚̕̚͝Ų̴̲̤̭̩͔̤̗̱̙̻̹̭̐͛̽͋̐̓̇̕͝T̴̈́̒̔̒͌̓̐͗̏̊̓̀̎̒̀̏̀͗̿̚͠͠F̶̈́̍́̔͒̌͗̈́̽͒̊̋̆̉͆̾̐͑̔̚̚͝-̸̃͗̀̓̇̆̍̆͆̄͗̓̈́̆͌͐́̀̊͐͌͝8̷̎̈̃̉͑̓̆̑̉̔̑͒͒̅͋̆̃̈́̄̔͘͝惡̴͊͋͗̎̽̌̽̉͂̓̊̅͋̈̍͆͌̈́̽͘͠͝ ̸̆̈́́̂̍͛́͗̇̀̈͒̿̓̓̎̀̎̈́̚̕͝惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝</h1></header><div class=\"gallery-grid\">";
-							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
-							imgcard+="</div></div></body></html>";
-	
-							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
-						       	headhttp+=std::to_string(lines_index.size() + imgcard.size()) + "\r\nConnection: close\r\n\r\n" + lines_index + imgcard;
-							
-							send(client,headhttp.c_str(),headhttp.size(),0);
-							close(client);std::cout<<"Client dissconnected\n";return;
 						}
-						catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
+						hsearchf.close();
+					
+						std::vector<std::string> sites={"inetpic"};
+						
+						std::string list_s="<body><div class=\"main-frame\"><header><h1>SITES LIST</h1></header><nav class=\"nav-list\">";
+						for (int i=0;i<sites.size();i++){list_s+="<a href=\"/" + sites[i] + "\" class=\"nav-item\"><b>" + sites[i] + "</b></a>";}
+						list_s+="</nav></div></body></html>";
+						std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: " + std::to_string(linef.size() + list_s.size()) + "\r\nConnection: close\r\n\r\n" + linef + list_s;
+							
+						send(client,headhttp.c_str(),headhttp.size(),0);
 					}
+					catch(std::exception &er){std::cout<<"Error: "<<er.what();}
 				}
-				if (sb>0)
+				
+				str="";
+				for (int i=0;i<21;i++){str+=buffer[i];}
+				if (str=="GET /inetpic HTTP/1.1")
 				{
-					str="";
-					for (int i=0;buffer[i]!=' ';i++){str+=buffer[i];}
-					if (str=="GET")
+					try
 					{
-						try
+						std::ifstream hindexf("inetpic.html");
+						std::string lines_index="";
+			
+						while (!hindexf.eof())
 						{
-							str="";
-							for (int i=5;buffer[i]!=' ';i++){str+=buffer[i];}
+							std::string cl;
+							getline(hindexf,cl);
+							lines_index+=cl;
+						}
+						hindexf.close();
+						
+						std::vector<std::string> fls;
+						for (auto &c:std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename().string());}
+						
+						std::string imgcard="<body><div class=\"main-frame\"><header><h1>惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝ ̶̛̛̆͛́̓̈́͂͌͑̒̉͐̀̀͋̀̚̚̕̚͝Ų̴̲̤̭̩͔̤̗̱̙̻̹̭̐͛̽͋̐̓̇̕͝T̴̈́̒̔̒͌̓̐͗̏̊̓̀̎̒̀̏̀͗̿̚͠͠F̶̈́̍́̔͒̌͗̈́̽͒̊̋̆̉͆̾̐͑̔̚̚͝-̸̃͗̀̓̇̆̍̆͆̄͗̓̈́̆͌͐́̀̊͐͌͝8̷̎̈̃̉͑̓̆̑̉̔̑͒͒̅͋̆̃̈́̄̔͘͝惡̴͊͋͗̎̽̌̽̉͂̓̊̅͋̈̍͆͌̈́̽͘͠͝ ̸̆̈́́̂̍͛́͗̇̀̈͒̿̓̓̎̀̎̈́̚̕͝惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝</h1></header><div class=\"gallery-grid\">";
+						for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
+						imgcard+="</div></div></body></html>";
+
+						std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";	
+						headhttp+=std::to_string(lines_index.size() + imgcard.size()) + "\r\nConnection: close\r\n\r\n" + lines_index + imgcard;
 							
-							if (!str.empty())
+						send(client,headhttp.c_str(),headhttp.size(),0);
+						close(client);std::cout<<"Client dissconnected\n";return;
+					}
+					catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
+				}
+				
+				str="";
+				for (int i=0;buffer[i]!=' ';i++){str+=buffer[i];}
+				if (str=="GET")
+				{
+					try
+					{
+						str="";
+						for (int i=5;buffer[i]!=' ';i++){str+=buffer[i];}
+							
+						if (!str.empty())
+						{
+							std::ifstream file("inetpic_data/" + str,std::ios::binary);
+							if (file.is_open())
 							{
-								std::ifstream file("inetpic_data/" + str,std::ios::binary);
-								if (file.is_open())
-								{
-									file.seekg(0,std::ios::end);
-									size_t fs=file.tellg();
-									file.seekg(0,std::ios::beg);
-		
-									std::vector<char> fld(fs);
-									file.read(reinterpret_cast<char*>(fld.data()),fld.size());
-									file.close();
-									data="HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nContent-Length: " + std::to_string(fs) + "\r\nConnection: close\r\n\r\n";
-									send(client,data.c_str(),data.size(),0);
-									send(client,fld.data(),fld.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
-								}
-								else
-								{
-									data="HTTP/1.1 404 Not Found\r\n\r\n";
-									send(client,data.c_str(),data.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
-								}
+								file.seekg(0,std::ios::end);
+								size_t fs=file.tellg();
+								file.seekg(0,std::ios::beg);
+									
+								std::vector<char> fld(fs);
+								file.read(reinterpret_cast<char*>(fld.data()),fld.size());
+								file.close();
+								data="HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nContent-Length: " + std::to_string(fs) + "\r\nConnection: close\r\n\r\n";
+								send(client,data.c_str(),data.size(),0);
+								send(client,fld.data(),fld.size(),0);
+								close(client);std::cout<<"Client dissconnected\n";return;
+							}
+							else
+							{
+								data="HTTP/1.1 404 Not Found\r\n\r\n";
+								send(client,data.c_str(),data.size(),0);
+								close(client);std::cout<<"Client dissconnected\n";return;
 							}
 						}
-						catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
 					}
+					catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
 				}
 				else{std::string err_url="0";send(client,err_url.c_str(),err_url.size(),0);}
 			}
