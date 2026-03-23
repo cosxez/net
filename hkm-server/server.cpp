@@ -126,7 +126,7 @@ void client_conn(int client)
 							for (auto &c:std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename().string());}
 							
 							std::string imgcard="<body><div class=\"main-frame\"><header><h1>惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝ ̶̛̛̆͛́̓̈́͂͌͑̒̉͐̀̀͋̀̚̚̕̚͝Ų̴̲̤̭̩͔̤̗̱̙̻̹̭̐͛̽͋̐̓̇̕͝T̴̈́̒̔̒͌̓̐͗̏̊̓̀̎̒̀̏̀͗̿̚͠͠F̶̈́̍́̔͒̌͗̈́̽͒̊̋̆̉͆̾̐͑̔̚̚͝-̸̃͗̀̓̇̆̍̆͆̄͗̓̈́̆͌͐́̀̊͐͌͝8̷̎̈̃̉͑̓̆̑̉̔̑͒͒̅͋̆̃̈́̄̔͘͝惡̴͊͋͗̎̽̌̽̉͂̓̊̅͋̈̍͆͌̈́̽͘͠͝ ̸̆̈́́̂̍͛́͗̇̀̈͒̿̓̓̎̀̎̈́̚̕͝惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝</h1></header><div class=\"gallery-grid\">";
-							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
+							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"inetpic_data/" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
 							imgcard+="</div></div></body></html>";
 	
 							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
