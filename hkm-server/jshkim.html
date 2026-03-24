@@ -1,0 +1,184 @@
+</div></main><footer><div class="now-playing"><img src="" id="current-cover" style="display:none;"><div><div class="track-name" id="current-title">Select Track</div><div class="artist-name" id="current-artist">-</div></div></div><div class="player-controls"><div class="btns"><span id="prev-btn" onclick="prevTrack()">«</span><span id="play-btn" onclick="togglePlay()">►</span><span id="next-btn" onclick="nextTrack()">»</span></div><div class="progress-wrapper"><div class="time-current" id="time-current">0:00</div><div class="progress-container" onclick="seek(event)"><div id="progress"></div></div><div class="time-duration" id="time-duration">0:00</div></div></div><div style="text-align: right; font-size: 10px; letter-spacing: 2px;">VOL <input type="range" id="volume-slider" min="0" max="1" step="0.01" oninput="document.getElementById('audio').volume = parseFloat(this.value); setCookie('audioVolume', this.value, 365);" style="width: 80px; vertical-align: middle; filter: grayscale(1);"></div></footer></div><audio id="audio" ontimeupdate="updateProgress()" onended="nextTrack()"></audio><script>
+let playlist = [];
+let currentTrackIndex = 0;
+
+function setCookie(name, value, days) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+}
+
+function getCookie(name) {
+    const nameEQ = name + '=';
+    const ca = document.cookie.split(';');
+    for(let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return mins + ':' + (secs < 10 ? '0' : '') + secs;
+}
+
+function playTrackFromPlaylist(index) {
+    if (index < 0 || index >= playlist.length) return;
+    const track = playlist[index];
+    currentTrackIndex = index;
+    audio.src = track.src;
+    document.getElementById('current-title').innerText = track.title;
+    document.getElementById('current-artist').innerText = track.artist;
+    const cover = document.getElementById('current-cover');
+    if (track.cover) {
+        cover.src = track.cover;
+        cover.style.display = 'block';
+    }
+    audio.play();
+    playBtn.innerText = '█';
+}
+
+function playTrack(title, artist, src, element) {
+    const existingIndex = playlist.findIndex(t => t.src === src);
+    if (existingIndex !== -1) {
+        currentTrackIndex = existingIndex;
+        playTrackFromPlaylist(currentTrackIndex);
+    } else {
+        const track = {
+            title: title,
+            artist: artist,
+            src: src,
+            cover: element ? element.querySelector('img').src : ''
+        };
+        playlist.push(track);
+        currentTrackIndex = playlist.length - 1;
+        playTrackFromPlaylist(currentTrackIndex);
+    }
+}
+
+function nextTrack() {
+    if (playlist.length === 0) return;
+    let nextIndex = currentTrackIndex + 1;
+    if (nextIndex >= playlist.length) {
+        nextIndex = 0;
+    }
+    playTrackFromPlaylist(nextIndex);
+}
+
+function prevTrack() {
+    if (playlist.length === 0) return;
+    let prevIndex = currentTrackIndex - 1;
+    if (prevIndex < 0) {
+        prevIndex = playlist.length - 1;
+    }
+    playTrackFromPlaylist(prevIndex);
+}
+
+const audio = document.getElementById('audio');
+const playBtn = document.getElementById('play-btn');
+const progress = document.getElementById('progress');
+
+const savedVolume = getCookie('audioVolume');
+if (savedVolume !== null) {
+    audio.volume = parseFloat(savedVolume);
+    document.getElementById('volume-slider').value = savedVolume;
+} else {
+    audio.volume = 0.5;
+    document.getElementById('volume-slider').value = 0.5;
+}
+
+function togglePlay() {
+    if (audio.paused) {
+        audio.play();
+        playBtn.innerText = '█';
+    } else {
+        audio.pause();
+        playBtn.innerText = '►';
+    }
+}
+
+function updateProgress() {
+    if (!isNaN(audio.duration) && audio.duration !== Infinity) {
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progress.style.width = percent + '%';
+        document.getElementById('time-current').innerText = formatTime(audio.currentTime);
+        document.getElementById('time-duration').innerText = formatTime(audio.duration);
+    }
+}
+
+function seek(e) {
+    const rect = e.target.closest('.progress-container').getBoundingClientRect();
+    const width = rect.width;
+    const clickX = e.clientX - rect.left;
+    const duration = audio.duration;
+    if (!isNaN(duration)) {
+        audio.currentTime = (clickX / width) * duration;
+    }
+}
+</script>
+<style>
+.progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 5px;
+}
+.progress-container {
+    flex: 1;
+    height: 2px;
+    background: #222;
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+}
+.progress-container::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 0;
+    right: 0;
+    height: 26px;
+    cursor: pointer;
+}
+#progress {
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    width: 0%;
+    pointer-events: none;
+    transition: width 0.1s linear;
+}
+.time-current, .time-duration {
+    font-size: 10px;
+    color: #777;
+    min-width: 35px;
+    letter-spacing: 0;
+}
+.btns {
+    display: flex;
+    gap: 15px;
+    letter-spacing: 0;
+    margin-bottom: 8px;
+}
+.btns span {
+    cursor: pointer;
+    padding: 5px 8px;
+    font-size: 16px;
+    transition: 0.3s;
+}
+.btns span:hover {
+    color: #1db954;
+}
+.player-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+</style>
+</body></html>

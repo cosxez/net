@@ -126,7 +126,7 @@ void client_conn(int client)
 							for (auto &c:std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename().string());}
 							
 							std::string imgcard="<body><div class=\"main-frame\"><header><h1>惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝ ̶̛̛̆͛́̓̈́͂͌͑̒̉͐̀̀͋̀̚̚̕̚͝Ų̴̲̤̭̩͔̤̗̱̙̻̹̭̐͛̽͋̐̓̇̕͝T̴̈́̒̔̒͌̓̐͗̏̊̓̀̎̒̀̏̀͗̿̚͠͠F̶̈́̍́̔͒̌͗̈́̽͒̊̋̆̉͆̾̐͑̔̚̚͝-̸̃͗̀̓̇̆̍̆͆̄͗̓̈́̆͌͐́̀̊͐͌͝8̷̎̈̃̉͑̓̆̑̉̔̑͒͒̅͋̆̃̈́̄̔͘͝惡̴͊͋͗̎̽̌̽̉͂̓̊̅͋̈̍͆͌̈́̽͘͠͝ ̸̆̈́́̂̍͛́͗̇̀̈͒̿̓̓̎̀̎̈́̚̕͝惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝</h1></header><div class=\"gallery-grid\">";
-							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"inetpic_data/" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
+							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
 							imgcard+="</div></div></body></html>";
 	
 							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
@@ -167,9 +167,13 @@ void client_conn(int client)
 								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;}
 								curposfn+=1;
 								for (curposfn;fls[i][curposfn]!='.';curposfn++){authorsong+=fls[i][curposfn];}
-								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"/hkim_data/" + songname + '_' + authorsong + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
+								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"hkim_data_img/" + songname + '_' + authorsong + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
 							}
-							musiccard+="</div></main><footer><div class=\"now-playing\"><img src=\"\" id=\"current-cover\" style=\"display:none;\"><div><div class=\"track-name\" id=\"current-title\">Select Track</div><div class=\"artist-name\" id=\"current-artist\">-</div></div></div><div class=\"player-controls\"><div class=\"btns\"><span onclick=\"document.getElementById('audio').currentTime -= 10\">«</span><span id=\"play-btn\" onclick=\"togglePlay()\">►</span><span onclick=\"document.getElementById('audio').currentTime += 10\">»</span></div><div class=\"progress-container\" onclick=\"seek(event)\"><div id=\"progress\"></div></div></div><div style=\"text-align: right; font-size: 10px; letter-spacing: 2px;\">VOL <input type=\"range\" min=\"0\" max=\"1\" step=\"0.1\" oninput=\"document.getElementById('audio').volume = this.value\" style=\"width: 80px; vertical-align: middle; filter: grayscale(1);\"></div></footer></div><audio id=\"audio\" ontimeupdate=\"updateProgress()\"></audio><script> const audio = document.getElementById('audio'); const playBtn = document.getElementById('play-btn'); const progress = document.getElementById('progress'); function playTrack(title, artist, src, element) { audio.src = src; document.getElementById('current-title').innerText = title; document.getElementById('current-artist').innerText = artist; const cover = document.getElementById('current-cover'); cover.src = element.querySelector('img').src; cover.style.display = 'block'; audio.play(); playBtn.innerText = '█'; } function togglePlay() { if (audio.paused) { audio.play(); playBtn.innerText = '█'; } else { audio.pause(); playBtn.innerText = '►'; } } function updateProgress() { const percent = (audio.currentTime / audio.duration) * 100; progress.style.width = percent + '%'; } function seek(e) { const width = e.target.clientWidth; const clickX = e.offsetX; const duration = audio.duration; audio.currentTime = (clickX / width) * duration; } </script></body></html>";
+
+							std::ifstream jsindexf("jshkim.html");
+							while (!jsindexf.eof()){std::string cl;getline(jsindexf,cl);musiccard+=cl;}
+							jsindexf.close();
+
 							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
 							headhttp+=std::to_string(line_index.size() + musiccard.size()) + "\r\nConnection: close\r\n\r\n" + line_index + musiccard;
 							
