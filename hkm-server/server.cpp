@@ -130,7 +130,7 @@ void client_conn(int client)
 							imgcard+="</div></div></body></html>";
 	
 							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
-						       	headhttp+=std::to_string(lines_index.size() + imgcard.size()) + "\r\nConnection: close\r\n\r\n" + lines_index + imgcard;
+						      	headhttp+=std::to_string(lines_index.size() + imgcard.size()) + "\r\nConnection: close\r\n\r\n" + lines_index + imgcard;
 							
 							send(client,headhttp.c_str(),headhttp.size(),0);
 							close(client);std::cout<<"Client dissconnected\n";return;
@@ -163,11 +163,14 @@ void client_conn(int client)
 							{
 								std::string songname="";
 								std::string authorsong="";
+								std::string imgname="";
 								unsigned short curposfn=0;
-								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;}
+								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;if (fls[i][j]=='.'){break;};if (j>=fls[i].size()){break;}}
 								curposfn+=1;
-								for (curposfn;fls[i][curposfn]!='.';curposfn++){authorsong+=fls[i][curposfn];}
-								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"hkim_data_img/" + songname + '_' + authorsong + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
+								for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='.'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}
+								curposfn+=1;
+								for (curposfn;fls[i][curposfn]!='.';curposfn++){imgname+=fls[i][curposfn];if (curposfn>=fls[i].size()){break;}}
+								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"hkim_data_img/" + imgname + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
 							}
 
 							std::ifstream jsindexf("jshkim.html");
