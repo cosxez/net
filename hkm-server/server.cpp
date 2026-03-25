@@ -126,7 +126,7 @@ void client_conn(int client)
 							for (auto &c:std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename().string());}
 							
 							std::string imgcard="<body><div class=\"main-frame\"><header><h1>惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝ ̶̛̛̆͛́̓̈́͂͌͑̒̉͐̀̀͋̀̚̚̕̚͝Ų̴̲̤̭̩͔̤̗̱̙̻̹̭̐͛̽͋̐̓̇̕͝T̴̈́̒̔̒͌̓̐͗̏̊̓̀̎̒̀̏̀͗̿̚͠͠F̶̈́̍́̔͒̌͗̈́̽͒̊̋̆̉͆̾̐͑̔̚̚͝-̸̃͗̀̓̇̆̍̆͆̄͗̓̈́̆͌͐́̀̊͐͌͝8̷̎̈̃̉͑̓̆̑̉̔̑͒͒̅͋̆̃̈́̄̔͘͝惡̴͊͋͗̎̽̌̽̉͂̓̊̅͋̈̍͆͌̈́̽͘͠͝ ̸̆̈́́̂̍͛́͗̇̀̈͒̿̓̓̎̀̎̈́̚̕͝惡̶̉̄͆̿̓̋́͊̾̈̑́̈́̾̿̌̈̕͘͝͝͠ ̸̛̛͆͗̿̔͋͑͊̾͂͂̀̀̉̃̀̀͆͘͘͝é̵̾͊͂͊͗̆̋͊͐̀͐͛̎̂̊͗̒͘̚͘̚v̸̛̈́͌̔̐̎̎̊̈́͛́̏͌́̇̃̏̚͝͠͠͠ḯ̴͗̉̒̔̅͌̂̆̑̍͗̀́̌̆̈̔́̓̐̚l̷̛̄̊̋̈́̏̾͐̇̄͛̒́̑̾̐̋̂̆͘͠͝</h1></header><div class=\"gallery-grid\">";
-							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
+							for (int i=0;i<fls.size();i++){imgcard+="<div class=\"img-card\"><img src=\"inetpic_data/" + fls[i] + "\"><div class=\"img-info\"><span>cvnt</span><b>" + fls[i] + "</b></div></div>";}
 							imgcard+="</div></div></body></html>";
 	
 							std::string headhttp="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
@@ -167,9 +167,10 @@ void client_conn(int client)
 								unsigned short curposfn=0;
 								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;if (fls[i][j]=='.'){break;};if (j>=fls[i].size()){break;}}
 								curposfn+=1;
-								for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='.'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}
+								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='.'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}}
 								curposfn+=1;
-								for (curposfn;fls[i][curposfn]!='.';curposfn++){imgname+=fls[i][curposfn];if (curposfn>=fls[i].size()){break;}}
+								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='.';curposfn++){imgname+=fls[i][curposfn];if (curposfn>=fls[i].size()){break;}}}
+								curposfn+=1;
 								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"hkim_data_img/" + imgname + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
 							}
 
