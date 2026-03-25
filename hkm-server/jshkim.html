@@ -1,6 +1,7 @@
 </div></main><footer><div class="now-playing"><img src="" id="current-cover" style="display:none;"><div><div class="track-name" id="current-title">Select Track</div><div class="artist-name" id="current-artist">-</div></div></div><div class="player-controls"><div class="btns"><span id="prev-btn" onclick="prevTrack()">«</span><span id="play-btn" onclick="togglePlay()">►</span><span id="next-btn" onclick="nextTrack()">»</span></div><div class="progress-wrapper"><div class="time-current" id="time-current">0:00</div><div class="progress-container" onclick="seek(event)"><div id="progress"></div></div><div class="time-duration" id="time-duration">0:00</div></div></div><div style="text-align: right; font-size: 10px; letter-spacing: 2px;">VOL <input type="range" id="volume-slider" min="0" max="1" step="0.01" oninput="document.getElementById('audio').volume = parseFloat(this.value); setCookie('audioVolume', this.value, 365);" style="width: 80px; vertical-align: middle; filter: grayscale(1);"></div></footer></div><audio id="audio" ontimeupdate="updateProgress()" onended="nextTrack()"></audio><script>
 let playlist = [];
 let currentTrackIndex = 0;
+let libraryLoaded = false;
 
 function setCookie(name, value, days) {
     const expires = new Date();
@@ -26,6 +27,48 @@ function formatTime(seconds) {
     return mins + ':' + (secs < 10 ? '0' : '') + secs;
 }
 
+function loadAllTracksToPlaylist() {
+    if (libraryLoaded) return;
+    
+    const trackCards = document.querySelectorAll('.track-card');
+    trackCards.forEach((card, index) => {
+        const onclickAttr = card.getAttribute('onclick');
+        if (onclickAttr) {
+            const match = onclickAttr.match(/playTrack\('([^']+)', '([^']+)', '([^']+)', this\)/);
+            if (match) {
+                const title = match[1];
+                const artist = match[2];
+                const src = match[3];
+                const imgSrc = card.querySelector('img') ? card.querySelector('img').src : '';
+                
+                const track = {
+                    title: title,
+                    artist: artist,
+                    src: src,
+                    cover: imgSrc
+                };
+                playlist.push(track);
+            }
+        }
+    });
+    
+    libraryLoaded = true;
+    console.log('Tracks loaded: ' + playlist.length);
+}
+
+function playTrack(title, artist, src, element) {
+    if (!libraryLoaded) {
+        loadAllTracksToPlaylist();
+    }
+    
+    const existingIndex = playlist.findIndex(t => t.src === src);
+    
+    if (existingIndex !== -1) {
+        currentTrackIndex = existingIndex;
+        playTrackFromPlaylist(currentTrackIndex);
+    }
+}
+
 function playTrackFromPlaylist(index) {
     if (index < 0 || index >= playlist.length) return;
     const track = playlist[index];
@@ -40,24 +83,6 @@ function playTrackFromPlaylist(index) {
     }
     audio.play();
     playBtn.innerText = '█';
-}
-
-function playTrack(title, artist, src, element) {
-    const existingIndex = playlist.findIndex(t => t.src === src);
-    if (existingIndex !== -1) {
-        currentTrackIndex = existingIndex;
-        playTrackFromPlaylist(currentTrackIndex);
-    } else {
-        const track = {
-            title: title,
-            artist: artist,
-            src: src,
-            cover: element ? element.querySelector('img').src : ''
-        };
-        playlist.push(track);
-        currentTrackIndex = playlist.length - 1;
-        playTrackFromPlaylist(currentTrackIndex);
-    }
 }
 
 function nextTrack() {
@@ -118,6 +143,19 @@ function seek(e) {
     if (!isNaN(duration)) {
         audio.currentTime = (clickX / width) * duration;
     }
+}
+
+function showQueue() {
+    if (playlist.length === 0) {
+        alert('Library empty');
+        return;
+    }
+    let queueText = 'Library (' + playlist.length + ' tracks)\n\n';
+    playlist.forEach((track, i) => {
+        let prefix = (i === currentTrackIndex) ? '▶ ' : '   ';
+        queueText += prefix + (i + 1) + '. ' + track.title + ' - ' + track.artist + '\n';
+    });
+    alert(queueText);
 }
 </script>
 <style>
