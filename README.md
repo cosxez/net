@@ -28,4 +28,4 @@
 ### For server.cpp:
 ``g++ server.cpp -o main -lpthread``
 ### For client.cpp:
-``g++ client.cpp -o main``
+``g++ client.cpp -o main -lpthread``
