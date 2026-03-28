@@ -154,8 +154,19 @@ void client_conn(int client)
 							hindexf.close();
 
 							std::vector<std::string> fls;
+							std::vector<std::string> drs;
 
-							for (auto &c:std::filesystem::directory_iterator("hkim_data")){fls.push_back(c.path().filename().string());}
+							for (auto &c:std::filesystem::directory_iterator("hkim_data"))
+							{
+								if (std::filesystem::is_directory(c))
+								{
+									drs.push_back(c.path().filename().string());
+								}
+								else
+								{
+									fls.push_back(c.path().filename().string());
+								}
+							}
 
 							std::string musiccard="<body><div class=\"container\"><aside><div class=\"logo\">hkim</div><nav><a href=\"#\" class=\"active\">Home</a><a href=\"#\">Search</a><a href=\"#\">Your Library</a><br><a href=\"#\">Create Playlist</a><a href=\"#\">Liked Songs</a></nav></aside><main><div class=\"section-title\">New Releases</div><div class=\"sfn-grid\">";
 							
@@ -167,12 +178,26 @@ void client_conn(int client)
 								unsigned short curposfn=0;
 								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;if (fls[i][j]=='.'){break;};if (j>=fls[i].size()){break;}}
 								curposfn+=1;
-								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='.'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}}
+								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='.' || fls[i][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}}
 								curposfn+=1;
 								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='.';curposfn++){imgname+=fls[i][curposfn];if (curposfn>=fls[i].size()){break;}}}
-								curposfn+=1;
-								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"hkim_data_img/" + imgname + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
+									
+								musiccard+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + fls[i] + "\', this)\">" + "<img src=\"/hkim_data_img/" + imgname + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
 							}
+							
+							for (int i=0;i<drs.size();i++)
+							{
+								std::string pllimg="0";
+								for (auto &c:std::filesystem::directory_iterator("hkim_data/"+drs[i]))
+								{
+									std::string checkimg=c.path().filename().string();
+									if (checkimg.size()>4 && checkimg[checkimg.size()-1]=='g' && checkimg[checkimg.size()-2]=='p' && checkimg[checkimg.size()-3]=='j' && checkimg[checkimg.size()-4]=='.')
+									{
+										pllimg=checkimg;
+									}
+								}	
+								musiccard+="<div class=\"track-card\" onclick=\"window.location.href=\'hkim/playlists/"+ drs[i] + "\'\">" + "<img src=\"hkim_data/" +drs[i] + '/' + pllimg + '\"' + "<span class=\"track-name\">" + drs[i] + "</span></div>";
+							}	
 
 							std::ifstream jsindexf("jshkim.html");
 							while (!jsindexf.eof()){std::string cl;getline(jsindexf,cl);musiccard+=cl;}
@@ -185,6 +210,73 @@ void client_conn(int client)
 							close(client);std::cout<<"Client dissconnected\n";return;
 						}
 						catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
+					}
+					str="";
+					for (int i=0;i<20;i++){str+=buffer[i];}
+					if (str=="GET /hkim/playlists/")
+					{
+						for (int i=20;buffer[i]!=' ';i++){str+=buffer[i];}
+						for (auto &c:std::filesystem::directory_iterator("hkim_data"))
+						{
+							if (std::filesystem::is_directory(c))
+							{
+								if ((str + " HTTP/1.1")==("GET /hkim/playlists/" + c.path().filename().string() + " HTTP/1.1"))
+								{
+									std::ifstream hindexf("hkim.html");
+									std::string line_index="";
+									while (!hindexf.eof())
+									{
+										std::string cl;
+										getline(hindexf,cl);
+										line_index+=cl;
+									}
+									hindexf.close();
+	
+									std::vector<std::string> fns;
+									for (auto &b:std::filesystem::directory_iterator("hkim_data/" + c.path().filename().string()))
+									{
+										if (!std::filesystem::is_directory(b))
+										{
+											std::string is_img_e="";
+											for (int i=b.path().filename().string().size()-1;i>b.path().filename().string().size()-5;i--){is_img_e+=b.path().filename().string()[i];}
+											if (is_img_e!="gpj.")
+											{
+												fns.push_back(b.path().filename().string());
+											}
+										}
+									}
+	
+									std::string songname="";
+									std::string authorsong="";
+									std::string imgname="";
+									unsigned short curposfn=0;
+									std::string plmd="<body><div class=\"container\"><aside><div class=\"logo\">hkim</div><nav><a href=\"#\" class=\"active\">Home</a><a href=\"#\">Search</a><a href=\"#\">Your Library</a><br><a href=\"#\">Create Playlist</a><a href=\"#\">Liked Songs</a></nav></aside><main><div class=\"section-title\">playlist " + c.path().filename().string() + "</div><div class=\"sfn-grid\">";
+	
+									for (int j=0;j<fns.size();j++)
+									{
+										for (int u=0;fns[j][u]!='_';u++){songname+=fns[j][u];curposfn+=1;if (fns[j][u]=='.'){break;};if (u>=fns[j].size()){break;}}
+										curposfn+=1;
+										if (curposfn<fns[j].size()){for (curposfn;fns[j][curposfn]!='_';curposfn++){authorsong+=fns[j][curposfn];if (fns[j][curposfn]=='.' || fns[j][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fns[j].size()){break;}}}
+										curposfn+=1;
+										if (curposfn<fns[j].size()){for (curposfn;fns[j][curposfn]!='.';curposfn++){imgname+=fns[j][curposfn];if (curposfn>=fns[j].size()){break;}}}
+	
+										plmd+="<div class=\"track-card\" onclick=\"playTrack(\'" + songname + "\', \'" + authorsong + "\', \'/get_audio?file=" + c.path().filename().string() + '/' + fns[j] + "\', this)\">" + "<img src=\"/hkim_data_img/" + imgname + ".jpg\">" + "<span class=\"track-name\">" + songname + "</span>" + "<span class=\"artist-name\">" + authorsong + "</span></div>";
+									}
+									std::ifstream jsindexf("jshkim.html");
+									while (!jsindexf.eof())
+									{
+										std::string cl;
+										getline(jsindexf,cl);
+										plmd+=cl;
+									}
+									std::string pllpage="HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: ";
+	
+									pllpage+=std::to_string(line_index.size() + plmd.size()) + "\r\nConnection: close\r\n\r\n" +line_index+plmd;
+									send(client,pllpage.c_str(),pllpage.size(),0);
+									close(client);std::cout<<"Client dissconnected\n";return;
+								}
+							}
+						}
 					}
 				}
 				if (sb>0)
