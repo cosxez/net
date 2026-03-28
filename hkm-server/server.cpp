@@ -25,48 +25,59 @@ void client_conn(int client)
 			{
 				buffer[sb]='\0';
 				for (int i=0;i<sb;i++){str+=buffer[i];}
-				if (str=="inetpic")
+				if (sb>0)
 				{
-					std::string err_url="1";
-					send(client,err_url.c_str(),err_url.size(),0);
-					std::vector<std::string> fls;
-					for (auto &c: std::filesystem::directory_iterator("inetpic_data")){fls.push_back(c.path().filename().string());}
-
-					size_t flss=0;
-					for (int i=0;i<fls.size();i++){flss+=fls[i].size();}
-					send(client,&flss,sizeof(flss),0);
-					std::this_thread::sleep_for(std::chrono::milliseconds(10));
-					for (int i=0;i<fls.size();i++)
+					if (str=="t.n.c")
 					{
-						send(client,fls[i].c_str(),fls[i].size(),0);
-						std::this_thread::sleep_for(std::chrono::milliseconds(10));
-					}
-					while (true)
-					{
-						sb=recv(client,buffer,sizeof(buffer)-1,0);
-						buffer[sb]='\0';
-						str="";
-						for (int i=0;i<5;i++){str+=buffer[i];}
-						if (str=="close"){close(client);std::cout<<"Client dissconected\n";return;}
-						str="";
-						for (int i=0;i<9;i++){str+=buffer[i];}
-						if (str=="GET DATA:")
+						std::string tcommands="push-push file to server\nget-get file from server\n";
+						try
 						{
-							data="";
-							for (int i=9;buffer[i]!='\0';i++){data+=buffer[i];}
-							std::ifstream file("inetpic_data/" + data,std::ios::binary);
-							file.seekg(0,std::ios::end);
-							size_t fsd=file.tellg();
-							file.seekg(0,std::ios::beg);
+							send(client,tcommands.c_str(),tcommands.size(),0);
+							while (true)
+							{
+								sb=recv(client,buffer,sizeof(buffer)-1,0);
+								if (sb>0)
+								{
+									buffer[sb]='\0';
+									str="";
+									for (int i=0;i<4;i++){str+=buffer[i];}
+									if (str=="push")
+									{
+										int tcpos;
+										str="";for (int i=5;buffer[i]!=' ';i++){str+=buffer[i];tcpos=i;}
+										std::string filename=str;
+										tcpos+=2;
+										str="";for (tcpos;buffer[tcpos]!='\0';tcpos++){str+=buffer[tcpos];}
+										std::string dpath=str;
 	
-							std::vector<char> fs_data(fsd);
-							file.read(reinterpret_cast<char*>(fs_data.data()),fs_data.size());
-							file.close();
-							
-							send(client,&fsd,sizeof(fsd),0);
-							send(client,fs_data.data(),fs_data.size(),0);
+										size_t fs;
+										recv(client,&fs,sizeof(fs),0);
+										std::vector<char> fld(fs);
+										sb=0;
+										while (sb<fs){sb+=recv(client,fld.data()+sb,fld.size(),0);}
+										
+										std::ofstream file;
+										if (dpath.empty()){file.open(filename);}
+										else
+										{
+											if (dpath[dpath.size()-1]=='/')
+											{
+												file.open(dpath+filename);
+											}
+											else{file.open(dpath+'/'+filename);}
+										}
+										if (file.is_open())
+										{
+											file.write(reinterpret_cast<const char*>(fld.data()),fld.size());
+											file.close();
+											send(client,"file added\n",11,0);
+										}
+									}
+								}
+								else{close(client);break;}
+							}
 						}
-						
+						catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
 					}
 				}
 				if (sb>0)
@@ -196,7 +207,7 @@ void client_conn(int client)
 										pllimg=checkimg;
 									}
 								}	
-								musiccard+="<div class=\"track-card\" onclick=\"window.location.href=\'hkim/playlists/"+ drs[i] + "\'\">" + "<img src=\"hkim_data/" +drs[i] + '/' + pllimg + '\"' + "<span class=\"track-name\">" + drs[i] + "</span></div>";
+								musiccard+="<div class=\"track-card\" onclick=\"window.location.href=\'hkim/playlists/"+ drs[i] + "\'\">" + "<img src=\"hkim_data/" +drs[i] + '/' + pllimg + "\">" + "<span class=\"track-name\">" + drs[i] + "</span><span class=\"artist-name\">" + "playlist" + "</span></div>";
 							}	
 
 							std::ifstream jsindexf("jshkim.html");
