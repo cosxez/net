@@ -246,14 +246,14 @@ void client_conn(int client)
 										}
 									}
 	
-									std::string songname="";
-									std::string authorsong="";
-									std::string imgname="";
-									unsigned short curposfn=0;
 									std::string plmd="<body><div class=\"container\"><aside><div class=\"logo\">hkim</div><nav><a href=\"#\" class=\"active\">Home</a><a href=\"#\">Search</a><a href=\"#\">Your Library</a><br><a href=\"#\">Create Playlist</a><a href=\"#\">Liked Songs</a></nav></aside><main><div class=\"section-title\">playlist " + c.path().filename().string() + "</div><div class=\"sfn-grid\">";
 	
 									for (int j=0;j<fns.size();j++)
 									{
+										std::string songname="";
+										std::string authorsong="";
+										std::string imgname="";
+										unsigned short curposfn=0;
 										for (int u=0;fns[j][u]!='_';u++){songname+=fns[j][u];curposfn+=1;if (fns[j][u]=='.'){break;};if (u>=fns[j].size()){break;}}
 										curposfn+=1;
 										if (curposfn<fns[j].size()){for (curposfn;fns[j][curposfn]!='_';curposfn++){authorsong+=fns[j][curposfn];if (fns[j][curposfn]=='.' || fns[j][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fns[j].size()){break;}}}
