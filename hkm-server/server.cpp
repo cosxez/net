@@ -29,7 +29,7 @@ void client_conn(int client)
 				{
 					if (str=="t.n.c")
 					{
-						std::string tcommands="push-push file to server\nget-get file from server\n";
+						std::string tcommands="push - push <server path> <client path>\nget - get <server path> <client path>\n";
 						try
 						{
 							send(client,tcommands.c_str(),tcommands.size(),0);
@@ -40,37 +40,51 @@ void client_conn(int client)
 								{
 									buffer[sb]='\0';
 									str="";
-									for (int i=0;i<4;i++){str+=buffer[i];}
+									for (int i=0;i<sb;i++){str+=buffer[i];}
 									if (str=="push")
 									{
-										int tcpos;
-										str="";for (int i=5;buffer[i]!=' ';i++){str+=buffer[i];tcpos=i;}
-										std::string filename=str;
-										tcpos+=2;
-										str="";for (tcpos;buffer[tcpos]!='\0';tcpos++){str+=buffer[tcpos];}
-										std::string dpath=str;
-	
-										size_t fs;
+										sb=recv(client,buffer,sizeof(buffer)-1,0);
+										buffer[sb]='\0';
+
+										std::string spath;
+										for (int i=0;i<sb;i++){spath+=buffer[i];}
+
+										size_t fs=0;
 										recv(client,&fs,sizeof(fs),0);
 										std::vector<char> fld(fs);
 										sb=0;
 										while (sb<fs){sb+=recv(client,fld.data()+sb,fld.size(),0);}
 										
-										std::ofstream file;
-										if (dpath.empty()){file.open(filename);}
-										else
-										{
-											if (dpath[dpath.size()-1]=='/')
-											{
-												file.open(dpath+filename);
-											}
-											else{file.open(dpath+'/'+filename);}
-										}
+										std::ofstream file(spath);
 										if (file.is_open())
 										{
 											file.write(reinterpret_cast<const char*>(fld.data()),fld.size());
 											file.close();
 											send(client,"file added\n",11,0);
+										}
+									}
+									if (str=="get")
+									{
+										sb=recv(client,buffer,sizeof(buffer)-1,0);
+										buffer[sb]='\0';
+
+										std::string spath;
+										for (int i=0;i<sb;i++){spath+=buffer[i];}
+
+										std::ifstream file(spath);
+										if (file.is_open())
+										{
+											file.seekg(0,std::ios::end);
+											size_t fs=file.tellg();
+											file.seekg(0,std::ios::beg);
+
+											send(client,&fs,sizeof(fs),0);
+											std::vector<char> fld(fs);
+											file.read(reinterpret_cast<char*>(fld.data()),fld.size());
+											file.close();
+
+											std::this_thread::sleep_for(std::chrono::milliseconds(100));
+											send(client,fld.data(),fld.size(),0);
 										}
 									}
 								}
