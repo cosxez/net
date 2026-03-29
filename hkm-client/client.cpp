@@ -61,7 +61,7 @@ int main()
 						int sb=recv(sock,buffer,sizeof(buffer)-1,0);
 						buffer[sb]='\0';
 						for (int i=0;i<sb;i++){std::cout<<buffer[i];}
-						
+
 						while (true)
 						{
 							std::string tcmd;
@@ -69,9 +69,18 @@ int main()
 							if (tcmd=="exit"){close(sock);break;}
 							if (tcmd.size()>4 && tcmd[0]=='p' && tcmd[1]=='u' && tcmd[2]=='s' && tcmd[3]=='h')
 							{
-								std::string filename;
-								for (int i=5;tcmd[i]!=' ';i++){filename+=tcmd[i];}
-								std::ifstream file(filename);
+								send(sock,"push",4,0);
+
+								std::string spath;
+								int tcpos;
+								for (int i=5;tcmd[i]!=' ';i++){if (i>=tcmd.size()){break;};spath+=tcmd[i];tcpos=i;}
+								send(sock,spath.c_str(),spath.size(),0);
+								std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+								std::string cpath;
+								tcpos+=2;for (tcpos;tcpos<tcmd.size();tcpos++){cpath+=tcmd[tcpos];}
+								
+								std::ifstream file(cpath);
 								if (file.is_open())
 								{
 									file.seekg(0,std::ios::end);
@@ -82,8 +91,6 @@ int main()
 									file.read(reinterpret_cast<char*>(fld.data()),fld.size());
 									file.close();
 									
-									send(sock,tcmd.c_str(),tcmd.size(),0);
-									std::this_thread::sleep_for(std::chrono::milliseconds(100));
 									send(sock,&fs,sizeof(fs),0);
 									std::this_thread::sleep_for(std::chrono::milliseconds(100));
 									send(sock,fld.data(),fld.size(),0);
@@ -93,6 +100,31 @@ int main()
 									for (int i=0;i<sb;i++){std::cout<<buffer[i];}
 								}
 								else{std::cout<<"file dont open\n";}
+							}
+
+							if (tcmd.size()>3 && tcmd[0]=='g' && tcmd[1]=='e' && tcmd[2]=='t')
+							{
+								send(sock,"get",3,0);
+
+								std::string spath;
+								int tcpos;
+								for (int i=4;tcmd[i]!=' ';i++){if (i>=tcmd.size()){break;};spath+=tcmd[i];tcpos=i;}
+								send(sock,spath.c_str(),spath.size(),0);
+								std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+								std::string cpath;
+								tcpos+=2;for (tcpos;tcpos<tcmd.size();tcpos++){cpath+=tcmd[tcpos];}
+
+								size_t fs=0;
+								recv(sock,&fs,sizeof(fs),0);
+								std::vector<char> fld(fs);
+								sb=0;
+								while (sb<fs){sb+=recv(sock,fld.data()+sb,fld.size(),0);}
+
+								std::ofstream file(cpath);
+								file.write(reinterpret_cast<const char*>(fld.data()),fld.size());
+								file.close();
+								std::cout<<"Done\n";
 							}
 						}
 					}
