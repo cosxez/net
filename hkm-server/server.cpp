@@ -49,6 +49,7 @@ void client_conn(int client)
 										std::string spath;
 										for (int i=0;i<sb;i++){spath+=buffer[i];}
 
+										std::this_thread::sleep_for(std::chrono::milliseconds(100));
 										size_t fs=0;
 										recv(client,&fs,sizeof(fs),0);
 										std::vector<char> fld(fs);
@@ -271,7 +272,7 @@ void client_conn(int client)
 										}
 									}
 	
-									std::string plmd="<body><div class=\"container\"><aside><div class=\"logo\">hkim</div><nav><a href=\"#\" class=\"active\">Home</a><a href=\"#\">Search</a><a href=\"#\">Your Library</a><br><a href=\"#\">Create Playlist</a><a href=\"#\">Liked Songs</a></nav></aside><main><div class=\"section-title\">playlist " + c.path().filename().string() + "</div><div class=\"sfn-grid\">";
+									std::string plmd="<body><div class=\"container\"><aside><div class=\"logo\">hkim</div><nav><a href=\"/hkim\" class=\"active\">Home</a><a href=\"#\">Search</a><a href=\"#\">Your Library</a><br><a href=\"#\">Create Playlist</a><a href=\"#\">Liked Songs</a></nav></aside><main><div class=\"section-title\">playlist " + c.path().filename().string() + "</div><div class=\"sfn-grid\">";
 	
 									for (int j=0;j<fns.size();j++)
 									{
