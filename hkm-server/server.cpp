@@ -49,7 +49,6 @@ void client_conn(int client)
 										std::string spath;
 										for (int i=0;i<sb;i++){spath+=buffer[i];}
 
-										std::this_thread::sleep_for(std::chrono::milliseconds(100));
 										size_t fs=0;
 										recv(client,&fs,sizeof(fs),0);
 										std::vector<char> fld(fs);
