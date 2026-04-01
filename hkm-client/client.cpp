@@ -75,7 +75,7 @@ int main()
 								int tcpos;
 								for (int i=5;tcmd[i]!=' ';i++){if (i>=tcmd.size()){break;};spath+=tcmd[i];tcpos=i;}
 								send(sock,spath.c_str(),spath.size(),0);
-								std::this_thread::sleep_for(std::chrono::milliseconds(100));
+								std::this_thread::sleep_for(std::chrono::seconds(1));
 
 								std::string cpath;
 								tcpos+=2;for (tcpos;tcpos<tcmd.size();tcpos++){cpath+=tcmd[tcpos];}
@@ -88,11 +88,12 @@ int main()
 									file.seekg(0,std::ios::beg);
 									
 									std::vector<char> fld(fs);
+									send(sock,&fs,sizeof(fs),0);
+									std::this_thread::sleep_for(std::chrono::seconds(1));
+
 									file.read(reinterpret_cast<char*>(fld.data()),fld.size());
 									file.close();
 									
-									send(sock,&fs,sizeof(fs),0);
-									std::this_thread::sleep_for(std::chrono::milliseconds(100));
 									send(sock,fld.data(),fld.size(),0);
 									
 									sb=recv(sock,buffer,sizeof(buffer)-1,0);
