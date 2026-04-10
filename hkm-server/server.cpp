@@ -13,7 +13,7 @@
 
 void client_conn(int client)
 {
-	char buffer[2048];
+	unsigned char buffer[2048];
 	std::string str;
 	std::string data;
 	while (true)
@@ -29,7 +29,7 @@ void client_conn(int client)
 				{
 					if (str=="t.n.c")
 					{
-						std::string tcommands="push - push <server path> <client path>\nget - get <server path> <client path>\n";
+						std::string tcommands="push - push <server path> <client path>\nget - get <server path> <client path>\ngfl - get file list from directory\n";
 						try
 						{
 							send(client,tcommands.c_str(),tcommands.size(),0);
@@ -62,6 +62,37 @@ void client_conn(int client)
 											file.close();
 											send(client,"file added\n",11,0);
 										}
+										else{send(client,"error\n",6,0);}
+									}
+									if (str=="gfl")
+									{
+										sb=recv(client,buffer,sizeof(buffer)-1,0);
+										str="";
+										for (int i=0;i<sb;i++){str+=buffer[i];}
+										data="";
+										unsigned int chk=0;
+										std::vector<std::string> lfs;
+										for (auto &c:std::filesystem::directory_iterator(str))
+										{
+											if (std::filesystem::is_directory(c))
+											{
+												lfs.push_back(c.path().filename().string() + " <directory>");
+											}
+											else{lfs.push_back(c.path().filename().string());}
+										}
+										if (lfs.size()>0)
+										{
+											unsigned short mcb=lfs[0].size();
+											for (int i=0;i<lfs.size();i++){if (mcb<lfs[i].size()){mcb=lfs[i].size();}}
+											for (int i=0;i<lfs.size();i++)
+											{
+												chk+=1;
+												if (chk%4==0){data+=lfs[i] + '\n';}
+												else{data+=lfs[i] + std::string(mcb+1-lfs[i].size(),' ');}
+											}
+											send(client,data.c_str(),data.size(),0);
+										}
+										else{send(client,"error\n",6,0);}
 									}
 									if (str=="get")
 									{
@@ -201,9 +232,9 @@ void client_conn(int client)
 								std::string authorsong="";
 								std::string imgname="";
 								unsigned short curposfn=0;
-								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;if (fls[i][j]=='.'){break;};if (j>=fls[i].size()){break;}}
+								for (int j=0;fls[i][j]!='_';j++){songname+=fls[i][j];curposfn+=1;if (j>=fls[i].size()){break;}}
 								curposfn+=1;
-								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='.' || fls[i][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}}
+								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='_';curposfn++){authorsong+=fls[i][curposfn];if (fls[i][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fls[i].size()){break;}}}
 								curposfn+=1;
 								if (curposfn<fls[i].size()){for (curposfn;fls[i][curposfn]!='.';curposfn++){imgname+=fls[i][curposfn];if (curposfn>=fls[i].size()){break;}}}
 									
@@ -279,9 +310,9 @@ void client_conn(int client)
 										std::string authorsong="";
 										std::string imgname="";
 										unsigned short curposfn=0;
-										for (int u=0;fns[j][u]!='_';u++){songname+=fns[j][u];curposfn+=1;if (fns[j][u]=='.'){break;};if (u>=fns[j].size()){break;}}
+										for (int u=0;fns[j][u]!='_';u++){songname+=fns[j][u];curposfn+=1;if (u>=fns[j].size()){break;}}
 										curposfn+=1;
-										if (curposfn<fns[j].size()){for (curposfn;fns[j][curposfn]!='_';curposfn++){authorsong+=fns[j][curposfn];if (fns[j][curposfn]=='.' || fns[j][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fns[j].size()){break;}}}
+										if (curposfn<fns[j].size()){for (curposfn;fns[j][curposfn]!='_';curposfn++){authorsong+=fns[j][curposfn];if (fns[j][curposfn]=='_'){authorsong.pop_back();break;};if (curposfn>=fns[j].size()){break;}}}
 										curposfn+=1;
 										if (curposfn<fns[j].size()){for (curposfn;fns[j][curposfn]!='.';curposfn++){imgname+=fns[j][curposfn];if (curposfn>=fns[j].size()){break;}}}
 	
