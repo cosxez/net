@@ -52,7 +52,7 @@ int main()
 					addr.sin_port=htons(std::stoi(port));
 					inet_pton(AF_INET,ip_addr.c_str(),&addr.sin_addr);
 					connect(sock,(struct sockaddr*)&addr,sizeof(addr));
-					char buffer[2048];
+					unsigned char buffer[2048];
 
 					if (is_ar==true)
 					{
@@ -101,6 +101,19 @@ int main()
 									for (int i=0;i<sb;i++){std::cout<<buffer[i];}
 								}
 								else{std::cout<<"file dont open\n";}
+							}
+
+							if (tcmd.size()>3 && tcmd[0]=='g' && tcmd[1]=='f' && tcmd[2]=='l')
+							{
+								send(sock,"gfl",3,0);
+								std::string spath;
+								for (int i=4;i<tcmd.size();i++){spath+=tcmd[i];}
+								
+								std::this_thread::sleep_for(std::chrono::seconds(1));
+								send(sock,spath.c_str(),spath.size(),0);
+								sb=recv(sock,buffer,sizeof(buffer)-1,0);
+								std::string str;for (int i=0;i<sb;i++){str+=buffer[i];}
+								std::cout<<str<<std::endl;
 							}
 
 							if (tcmd.size()>3 && tcmd[0]=='g' && tcmd[1]=='e' && tcmd[2]=='t')
