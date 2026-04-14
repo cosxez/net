@@ -69,13 +69,9 @@ int main()
 							if (tcmd=="exit"){close(sock);break;}
 							if (tcmd.size()>4 && tcmd[0]=='p' && tcmd[1]=='u' && tcmd[2]=='s' && tcmd[3]=='h')
 							{
-								send(sock,"push",4,0);
-
 								std::string spath;
 								int tcpos;
 								for (int i=5;tcmd[i]!=' ';i++){if (i>=tcmd.size()){break;};spath+=tcmd[i];tcpos=i;}
-								send(sock,spath.c_str(),spath.size(),0);
-								std::this_thread::sleep_for(std::chrono::seconds(1));
 
 								std::string cpath;
 								tcpos+=2;for (tcpos;tcpos<tcmd.size();tcpos++){cpath+=tcmd[tcpos];}
@@ -83,6 +79,11 @@ int main()
 								std::ifstream file(cpath);
 								if (file.is_open())
 								{
+									send(sock,"push",4,0);
+									std::this_thread::sleep_for(std::chrono::seconds(1));
+									send(sock,spath.c_str(),spath.size(),0);
+									std::this_thread::sleep_for(std::chrono::seconds(1));
+
 									file.seekg(0,std::ios::end);
 									size_t fs=file.tellg();
 									file.seekg(0,std::ios::beg);
