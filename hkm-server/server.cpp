@@ -526,6 +526,8 @@ void udp_client(int *sock,struct sockaddr_in faddr)
 			cpc+=fs-cpc;
 		}
 	}
+	unsigned short mgfer=0x3bad;
+	sendto(*sock,&mgfer,sizeof(mgfer),0,(struct sockaddr*)&faddr,sizeof(faddr));
 
 	std::string mlist;
 	for (auto &c:std::filesystem::directory_iterator("hkim_data/"))
