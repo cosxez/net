@@ -11,6 +11,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+struct mp_attrs
+{
+	unsigned short w;
+	unsigned short h;
+	unsigned char bg_attr;
+}__attribute__((packed));
+
 void client_conn(int client)
 {
 	unsigned char buffer[2048];
@@ -189,7 +196,7 @@ void client_conn(int client)
 						      	headhttp+=std::to_string(lines_index.size() + imgcard.size()) + "\r\nConnection: close\r\n\r\n" + lines_index + imgcard;
 							
 							send(client,headhttp.c_str(),headhttp.size(),0);
-							close(client);std::cout<<"Client dissconnected\n";return;
+							close(client);std::cout<<"Client disconnected\n";return;
 						}
 						catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
 					}
@@ -263,7 +270,7 @@ void client_conn(int client)
 							headhttp+=std::to_string(line_index.size() + musiccard.size()) + "\r\nConnection: close\r\n\r\n" + line_index + musiccard;
 							
 							send(client,headhttp.c_str(),headhttp.size(),0);
-							close(client);std::cout<<"Client dissconnected\n";return;
+							close(client);std::cout<<"Client disconnected\n";return;
 						}
 						catch(std::exception &er){std::cout<<"Error: "<<er.what()<<std::endl;}
 					}
@@ -329,7 +336,7 @@ void client_conn(int client)
 	
 									pllpage+=std::to_string(line_index.size() + plmd.size()) + "\r\nConnection: close\r\n\r\n" +line_index+plmd;
 									send(client,pllpage.c_str(),pllpage.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
+									close(client);std::cout<<"Client disconnected\n";return;
 								}
 							}
 						}
@@ -363,8 +370,9 @@ void client_conn(int client)
 								std::ifstream file("hkim_data/" + data,std::ios::binary);
 								if (file.is_open())
 								{
+									ssize_t fs=0;
 									file.seekg(0,std::ios::end);
-									size_t fs=file.tellg();
+									fs=file.tellg();
 									file.seekg(0,std::ios::beg);
 
 									std::vector<char> fld(fs);
@@ -374,13 +382,13 @@ void client_conn(int client)
 
 									send(client,data.c_str(),data.size(),0);
 									send(client,fld.data(),fld.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
+									close(client);std::cout<<"Client disconnected\n";return;
 								}
 								else
 								{
 									data="HTTP/1.1 404 Not Found\r\n\r\n";
 									send(client,data.c_str(),data.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
+									close(client);std::cout<<"Client disconnected\n";return;
 								}
 							}
 						}
@@ -415,13 +423,13 @@ void client_conn(int client)
 									data="HTTP/1.1 200 OK\r\nContent-Type: image/jpeg\r\nContent-Length: " + std::to_string(fs) + "\r\nConnection: close\r\n\r\n";
 									send(client,data.c_str(),data.size(),0);
 									send(client,fld.data(),fld.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
+									close(client);std::cout<<"Client disconnected\n";return;
 								}
 								else
 								{
 									data="HTTP/1.1 404 Not Found\r\n\r\n";
 									send(client,data.c_str(),data.size(),0);
-									close(client);std::cout<<"Client dissconnected\n";return;
+									close(client);std::cout<<"Client disconnected\n";return;
 								}
 							}
 						}
@@ -437,14 +445,128 @@ void client_conn(int client)
 		data.clear();
 	}
 	close(client);
-	std::cout<<"Client dissconeted\n";
+	std::cout<<"Client disconneted\n";
+}
+
+void udp_client(int *sock,struct sockaddr_in faddr)
+{
+	struct sockaddr_in ffaddr;
+	unsigned short con_mgc=0xac5f;
+	unsigned short mgcfe=0xe1dd;
+	sendto(*sock,&con_mgc,sizeof(con_mgc),0,(struct sockaddr*)&faddr,sizeof(faddr));
+
+	std::ifstream file_attr("mp_attr.lply");
+	if (!file_attr.is_open()){sendto(*sock,&mgcfe,sizeof(mgcfe),0,(struct sockaddr*)&faddr,sizeof(faddr));std::cout<<"UDP Client disconnected\n";return;}
+
+	unsigned short mxline=4096;
+	mp_attrs mpt;
+	std::string fnimg;
+	for (unsigned short i=0;!file_attr.eof();i++)
+	{
+		std::string cl;
+		getline(file_attr,cl);
+		if (i==0)
+		{
+			std::string sttr="";
+			unsigned short j=0;
+			for (j;cl[j]!='x';j++){if (j>=cl.size()){break;};sttr+=cl[j];}
+			mpt.w=std::stoi(sttr);
+			sttr="";j+=1;
+			for (j;cl[j]!='\n';j++){if (j>=cl.size()){break;};sttr+=cl[j];};
+			mpt.h=std::stoi(sttr);
+		}
+		if (i==1)
+		{
+			mpt.bg_attr=cl[0];
+			if (mpt.bg_attr=='i'&&cl.size()>1)
+			{
+				for (unsigned short j=1;cl[j]!='\n';j++)
+				{
+					if (j>=cl.size()){break;};fnimg+=cl[j];
+				}
+			}
+		}
+	}
+	sendto(*sock,&mpt,sizeof(mpt),0,(struct sockaddr*)&faddr,sizeof(faddr));
+	file_attr.close();
+
+	std::vector<unsigned char> bgv;
+	
+	size_t fs;
+	if (mpt.bg_attr=='c'){bgv.push_back(0xff);bgv.push_back(0x11);bgv.push_back(0x11);bgv.push_back(0x11);fs=bgv.size();sendto(*sock,&fs,sizeof(fs),0,(struct sockaddr*)&faddr,sizeof(faddr));}
+	if (mpt.bg_attr=='i'&&fnimg.size()>0)
+	{
+		std::ifstream file(fnimg,std::ios::binary);
+		if (file.is_open())
+		{
+			file.seekg(0,std::ios::end);
+			fs=file.tellg();
+			file.seekg(0,std::ios::beg);
+
+			sendto(*sock,&fs,sizeof(fs),0,(struct sockaddr*)&faddr,sizeof(faddr));
+
+			bgv.resize(fs);
+			file.read(reinterpret_cast<char*>(bgv.data()),fs);
+		}
+		file.close();
+	}
+
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	size_t cpc=0;
+	while (cpc<fs)
+	{
+		if ((cpc+1024)<fs)
+		{
+			sendto(*sock,&bgv[cpc],1024,0,(struct sockaddr*)&faddr,sizeof(faddr));
+			cpc+=1024;
+		}
+		else
+		{
+			sendto(*sock,&bgv[cpc],fs-cpc,0,(struct sockaddr*)&faddr,sizeof(faddr));
+			cpc+=fs-cpc;
+		}
+	}
+
+	std::string mlist;
+	for (auto &c:std::filesystem::directory_iterator("hkim_data/"))
+	{
+		if (!std::filesystem::is_directory(c))
+		{
+			mlist+=(c.path().filename().string())+'\n';
+		}
+	}
+	mlist.pop_back();
+	size_t mlists=mlist.size();
+	sendto(*sock,&mlists,sizeof(mlists),0,(struct sockaddr*)&faddr,sizeof(faddr));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	sendto(*sock,mlist.c_str(),mlists,0,(struct sockaddr*)&faddr,sizeof(faddr));
+
+	std::cout<<"UDP Client disconnected\n";
+}
+
+void udp_lsconn(int *sock)
+{
+	struct sockaddr_in faddr;
+	socklen_t ips=sizeof(faddr);
+	while (1)
+	{
+		try
+		{
+			unsigned short mgc;
+			int sb=recvfrom(*sock,&mgc,sizeof(mgc),0,(struct sockaddr*)&faddr,&ips);
+			if (sb>0 && mgc==0xc00f){std::thread(udp_client,sock,faddr).detach();std::cout<<"UDP Client connected\n";}
+		}
+		catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
+	}
 }
 
 int main()
 {
 	int sock=socket(AF_INET,SOCK_STREAM,0);
 	
-	sockaddr_in addr;
+	int usock=socket(AF_INET,SOCK_DGRAM,0);
+
+	struct sockaddr_in addr;
 	addr.sin_family=AF_INET;
 	addr.sin_port=htons(3580);
 	addr.sin_addr.s_addr=INADDR_ANY;
@@ -452,6 +574,11 @@ int main()
 	bind(sock,(struct sockaddr*)&addr,sizeof(addr));
 	listen(sock,16);
 
+	int opt = 1;
+	setsockopt(usock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	
+	bind(usock,(struct sockaddr*)&addr,sizeof(addr));
+	std::thread(udp_lsconn,&usock).detach();
 	std::cout<<"Server work\n";
 
 	while (true)
@@ -459,7 +586,7 @@ int main()
 		try
 		{
 			int cl=accept(sock,nullptr,nullptr);
-			std::cout<<"Client connected\n";
+			std::cout<<"TCP Client connected\n";
 			std::thread(client_conn,cl).detach();
 		}
 		catch(std::exception &e){std::cout<<"Error: "<<e.what()<<std::endl;}
