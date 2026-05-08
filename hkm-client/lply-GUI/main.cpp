@@ -50,16 +50,18 @@ int main()
 	if (lply_read(&sock,&faddr,&bgrm,sizeof(bgrm))<1){sclose(&sock);return -4;}
 	std::vector<unsigned char> bgv(bgrm);
 	size_t crpr=0;
+	unsigned char nfdwr=0;
 	while (crpr<bgrm)
 	{
 		size_t csb=lply_read(&sock,&faddr,(bgv.data()+crpr),bgrm);
+		if (csb==2 && *(uint16_t*)(bgv.data() + crpr)==0xe3dd){bgv.erase(bgv.begin()+crpr,bgv.begin()+crpr+2);nfdwr=1;break;}
 		if (csb<1){sclose(&sock);break;return -4;};
 		crpr+=csb;
 	}
+	if (nfdwr==0){unsigned short yaya;if (lply_read(&sock,&faddr,&yaya,sizeof(yaya))<1){sclose(&sock);return -4;}}
 
 	size_t mlistrm;
 	if (lply_read(&sock,&faddr,&mlistrm,sizeof(mlistrm))<1){sclose(&sock);return -4;}
-	//std::string mlist;mlist.reserve(mlistrm);
 	char mlist[mlistrm];
 	if (lply_read(&sock,&faddr,&mlist,mlistrm)<1){sclose(&sock);return -4;}
 
